@@ -280,7 +280,6 @@ os.makedirs("/shared/results", exist_ok=True)
 schema = StructType([
     StructField("kingdom", StringType(), True),
     StructField("scientificname", StringType(), True),
-    StructField("scientificName", StringType(), True),
     StructField("species", StringType(), True),
 ])
 
@@ -290,7 +289,7 @@ def process_batch(df, epoch_id, source):
     if df.count() == 0:
         return
     df = df.withColumn(
-        "sci_name", coalesce(col("scientificname"), col("scientificName"), col("species"))
+        "sci_name", coalesce(col("scientificname"), col("species"))
     ).withColumn("kingdom_norm", lower(col("kingdom")))
     kingdom_counts = df.filter(
         col("kingdom_norm").isin(["plantae", "animalia", "fungi"])
