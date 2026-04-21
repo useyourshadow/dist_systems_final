@@ -281,6 +281,8 @@ schema = StructType([
     StructField("kingdom", StringType(), True),
     StructField("scientificname", StringType(), True),
     StructField("species", StringType(), True),
+    StructField("dwc:kingdom", StringType(), True),
+    StructField("dwc:scientificname", StringType(), True),
 ])
 
 brokers = "10.10.1.1:9092,10.10.1.2:9092,10.10.1.3:9092"
@@ -289,8 +291,17 @@ def process_batch(df, epoch_id, source):
     if df.count() == 0:
         return
     df = df.withColumn(
-        "sci_name", coalesce(col("scientificname"), col("species"))
-    ).withColumn("kingdom_norm", lower(col("kingdom")))
+        "sci_name", coalesce(
+            col("`dwc:scientificname`"),
+            col("scientificname"),
+            col("species")
+        )
+    ).withColumn(
+        "kingdom_norm", lower(coalesce(
+            col("`dwc:kingdom`"),
+            col("kingdom")
+        ))
+    )
     kingdom_counts = df.filter(
         col("kingdom_norm").isin(["plantae", "animalia", "fungi"])
     ).groupBy("kingdom_norm").count().collect()
